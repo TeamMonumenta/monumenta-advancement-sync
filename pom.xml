@@ -21,7 +21,7 @@
         <repository>
             <id>github</id>
             <name>GitHub Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/TeamMonumenta/monumenta-network-relay</url>
+            <url>https://maven.pkg.github.com/TeamMonumenta/monumenta-advancement-sync</url>
         </repository>
     </distributionManagement>
 
