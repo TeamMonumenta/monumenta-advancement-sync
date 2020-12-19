@@ -17,6 +17,14 @@
         <minecraft.server.version>1.16.3-R0.1-SNAPSHOT</minecraft.server.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/TeamMonumenta/monumenta-network-relay</url>
+        </repository>
+    </distributionManagement>
+
     <repositories>
         <repository>
             <id>spigotmc-repo</id>
