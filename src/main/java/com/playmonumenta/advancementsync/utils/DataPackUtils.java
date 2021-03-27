@@ -100,18 +100,8 @@ public class DataPackUtils {
 			return null;
 		}
 
-		// JsonElement.deepCopy() is not public; serializing/deserializing as a workaround.
-		Gson gson = new Gson();
-
 		JsonElement title = displayObject.get("title");
-		if (title == null) {
-			return null;
-		}
-		title = gson.fromJson(gson.toJson(title), JsonObject.class);
 		JsonElement description = displayObject.get("description");
-		if (description != null) {
-			description = gson.fromJson(gson.toJson(description), JsonObject.class);
-		}
 
 		String frame = getChatAdvancementFrame(advancementJson);
 
