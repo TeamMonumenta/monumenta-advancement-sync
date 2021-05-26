@@ -229,7 +229,7 @@ public class AdvancementManager implements Listener {
 	}
 
 	private void broadcastAdvancementRecordRequest() throws Exception {
-		NetworkRelayAPI.sendBroadcastMessage(ADVANCEMENT_REQUEST_RECORD_CHANNEL, null);
+		NetworkRelayAPI.sendBroadcastMessage(ADVANCEMENT_REQUEST_RECORD_CHANNEL, new JsonObject());
 
 		mPlugin.getLogger().fine("Requested remote advancement records");
 	}
