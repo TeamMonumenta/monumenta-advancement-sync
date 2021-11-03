@@ -27,6 +27,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scoreboard.Team;
 
 public class AdvancementManager implements Listener {
+	public static final int BROADCAST_TTL = 10 * 60; // 10 minutes
 	public static final String ADVANCEMENT_RECORD_CHANNEL = "Monumenta.Broadcast.AdvancementRecord";
 	public static final String ADVANCEMENT_REQUEST_RECORD_CHANNEL = "Monumenta.Broadcast.AdvancementRecordRequest";
 
@@ -229,7 +230,7 @@ public class AdvancementManager implements Listener {
 	}
 
 	private void broadcastAdvancementRecordRequest() throws Exception {
-		NetworkRelayAPI.sendBroadcastMessage(ADVANCEMENT_REQUEST_RECORD_CHANNEL, new JsonObject());
+		NetworkRelayAPI.sendExpiringBroadcastMessage(ADVANCEMENT_REQUEST_RECORD_CHANNEL, new JsonObject(), BROADCAST_TTL);
 
 		mPlugin.getLogger().fine("Requested remote advancement records");
 	}
@@ -239,7 +240,7 @@ public class AdvancementManager implements Listener {
 		data.addProperty("advancementId", advancementId);
 		data.add("record", record.toJson());
 
-		NetworkRelayAPI.sendBroadcastMessage(ADVANCEMENT_RECORD_CHANNEL, data);
+		NetworkRelayAPI.sendExpiringBroadcastMessage(ADVANCEMENT_RECORD_CHANNEL, data, BROADCAST_TTL);
 
 		mPlugin.getLogger().fine("Requested record of advancement '" + advancementId + "'");
 	}
@@ -289,7 +290,7 @@ public class AdvancementManager implements Listener {
 		// Process the advancement records
 		if (!announceByTeam) {
 			String announceElsewhereCommand = "execute unless entity " + player.getName() + " run " + announcementCommand;
-			NetworkRelayAPI.sendBroadcastCommand(announceElsewhereCommand);
+			NetworkRelayAPI.sendExpiringBroadcastCommand(announceElsewhereCommand, BROADCAST_TTL);
 		}
 		AdvancementRecord newRecord = new AdvancementRecord(player, advancement);
 		broadcastAdvancementRecord(advancementId, newRecord);
