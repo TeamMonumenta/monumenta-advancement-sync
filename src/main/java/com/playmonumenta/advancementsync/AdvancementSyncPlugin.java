@@ -8,6 +8,7 @@ public class AdvancementSyncPlugin extends JavaPlugin {
 	@Override
 	public void onLoad() {
 		SetupTeamCommand.register();
+		UpdateScoreCommand.register();
 	}
 
 	@Override

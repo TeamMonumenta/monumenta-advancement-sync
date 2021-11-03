@@ -1,9 +1,9 @@
 package com.playmonumenta.advancementsync;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
 import com.google.gson.JsonArray;
@@ -24,6 +24,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 public class AdvancementManager implements Listener {
@@ -34,8 +37,9 @@ public class AdvancementManager implements Listener {
 	private static AdvancementManager INSTANCE = null;
 	private static Plugin mPlugin = null;
 	private static File mConfigFile;
-	private static Map<String, String> mWatchedTeams = new HashMap<String, String>();
-	private static Map<String, AdvancementRecord> mRecords = new HashMap<String, AdvancementRecord>();
+	private static Map<String, String> mWatchedTeams = new TreeMap<>();
+	private static Map<String, AdvancementRecord> mRecords = new TreeMap<>();
+	private static Map<String, Map<String, Integer>> mScores = new TreeMap<>();
 
 	private AdvancementManager(Plugin plugin) {
 		INSTANCE = this;
@@ -58,6 +62,7 @@ public class AdvancementManager implements Listener {
 		// Replace current state with previously saved state.
 		mWatchedTeams.clear();
 		mRecords.clear();
+		mScores.clear();
 
 		// Load all records as json
 		JsonObject allRecords;
@@ -85,6 +90,21 @@ public class AdvancementManager implements Listener {
 				AdvancementRecord record = new AdvancementRecord(recordJsonObject);
 
 				mRecords.put(advancementId, record);
+			}
+
+			JsonObject scores = allRecords.getAsJsonObject("scores");
+			if (scores != null) {
+				for (Map.Entry<String, JsonElement> objectiveEntry : scores.entrySet()) {
+					String objectiveName = objectiveEntry.getKey();
+					JsonObject objectiveScoresJson = objectiveEntry.getValue().getAsJsonObject();
+					Map<String, Integer> objectiveScores = new TreeMap<>();
+					mScores.put(objectiveName, objectiveScores);
+					for (Map.Entry<String, JsonElement> scoreEntry : objectiveScoresJson.entrySet()) {
+						String scoreHolder = scoreEntry.getKey();
+						int value = scoreEntry.getValue().getAsInt();
+						objectiveScores.put(scoreHolder, value);
+					}
+				}
 			}
 		} catch (Exception e) {
 			mPlugin.getLogger().log(Level.SEVERE, "Failed to load at least one advancement record. Aborting load.");
@@ -157,6 +177,20 @@ public class AdvancementManager implements Listener {
 		}
 		allRecords.add("records", records);
 
+		JsonObject scores = new JsonObject();
+		for (Map.Entry<String, Map<String, Integer>> objectiveEntry : mScores.entrySet()) {
+			String objectiveName = objectiveEntry.getKey();
+			Map<String, Integer> objectiveScores = objectiveEntry.getValue();
+			JsonObject objectiveScoresJson = new JsonObject();
+			for (Map.Entry<String, Integer> scoreEntry : objectiveScores.entrySet()) {
+				String scoreHolder = scoreEntry.getKey();
+				int value = scoreEntry.getValue();
+				objectiveScoresJson.addProperty(scoreHolder, value);
+			}
+			scores.add(objectiveName, objectiveScoresJson);
+		}
+		allRecords.add("scores", scores);
+
 		try {
 			FileUtils.writeJson(mConfigFile.getPath(), allRecords);
 		} catch (Exception e) {
@@ -172,6 +206,35 @@ public class AdvancementManager implements Listener {
 		saveState();
 	}
 
+	public void updateObjective(String objectiveName) {
+		mPlugin.getLogger().info("updateObjective(" + objectiveName + ")");
+		Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+		Objective objective = scoreboard.getObjective(objectiveName);
+		if (objective == null) {
+			mScores.remove(objectiveName);
+			saveState();
+			return;
+		}
+
+		Map<String, Integer> objectiveScores = new TreeMap<>();
+		for (String scoreHolder : scoreboard.getEntries()) {
+			Score score = objective.getScore(scoreHolder);
+			if (score.isScoreSet()) {
+				int value = score.getScore();
+				mPlugin.getLogger().info("- " + scoreHolder + ": " + Integer.toString(value));
+				objectiveScores.put(scoreHolder, value);
+			}
+		}
+
+		if (objectiveScores.isEmpty()) {
+			mPlugin.getLogger().info("- No scores set");
+			mScores.remove(objectiveName);
+		} else {
+			mPlugin.getLogger().info("- " + Integer.toString(objectiveScores.size()) + " scores set");
+			mScores.put(objectiveName, objectiveScores);
+		}
+		saveState();
+	}
 
 	@EventHandler(priority = EventPriority.LOW)
 	public void networkRelayMessageEvent(NetworkRelayMessageEvent event) {
@@ -400,7 +463,7 @@ public class AdvancementManager implements Listener {
 			rawJsonAdvancement = "\"" + advancementId + "\"";
 		}
 
-		Map<String, String> commandReplacements = new HashMap<String, String>();
+		Map<String, String> commandReplacements = new TreeMap<>();
 		commandReplacements.put("__advancement__", advancementId);
 		commandReplacements.put("\"__raw_json_advancement__\"", rawJsonAdvancement);
 		commandReplacements.put("__player__", playerName);
@@ -456,7 +519,7 @@ public class AdvancementManager implements Listener {
 			rawJsonAdvancement = "\"" + advancementId + "\"";
 		}
 
-		Map<String, String> commandReplacements = new HashMap<String, String>();
+		Map<String, String> commandReplacements = new TreeMap<>();
 		commandReplacements.put("__advancement__", advancementId);
 		commandReplacements.put("\"__raw_json_advancement__\"", rawJsonAdvancement);
 		commandReplacements.put("__team_id__", teamId);
