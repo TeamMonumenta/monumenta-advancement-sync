@@ -221,16 +221,16 @@ public class AdvancementManager implements Listener {
 			Score score = objective.getScore(scoreHolder);
 			if (score.isScoreSet()) {
 				int value = score.getScore();
-				mPlugin.getLogger().info("- " + scoreHolder + ": " + Integer.toString(value));
+				mPlugin.getLogger().fine("- " + scoreHolder + ": " + Integer.toString(value));
 				objectiveScores.put(scoreHolder, value);
 			}
 		}
 
 		if (objectiveScores.isEmpty()) {
-			mPlugin.getLogger().info("- No scores set");
+			mPlugin.getLogger().fine("- No scores set");
 			mScores.remove(objectiveName);
 		} else {
-			mPlugin.getLogger().info("- " + Integer.toString(objectiveScores.size()) + " scores set");
+			mPlugin.getLogger().fine("- " + Integer.toString(objectiveScores.size()) + " scores set");
 			mScores.put(objectiveName, objectiveScores);
 		}
 		saveState();
