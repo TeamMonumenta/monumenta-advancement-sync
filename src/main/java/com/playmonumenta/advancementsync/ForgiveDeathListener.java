@@ -47,10 +47,11 @@ public class ForgiveDeathListener implements Listener {
 				}
 				Mob mob = (Mob) entity;
 				if (!player.equals(mob.getTarget())) {
-					mob.setTarget(null);
-					if (mob instanceof PigZombie) {
-						((PigZombie) mob).setAngry(false);
-					}
+					continue;
+				}
+				mob.setTarget(null);
+				if (mob instanceof PigZombie) {
+					((PigZombie) mob).setAngry(false);
 				}
 			}
 		}
